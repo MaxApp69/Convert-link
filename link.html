@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendGo - View</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>File Viewer</h2>
+        <div id="file-preview"></div>
+        <p id="text-message"></p>
+        <button id="download-btn" onclick="downloadFile()">Download</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js"></script>
+    <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD8Rmym4TQJtG4i_eY9MDyrCVqi4zZdA6w",
+        authDomain: "continue-56506.firebaseapp.com",
+        databaseURL: "https://continue-56506-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "continue-56506",
+        storageBucket: "continue-56506.firebasestorage.app",
+        messagingSenderId: "182199976967",
+        appId: "1:182199976967:web:9389057bcaa05d605556a2"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    db.ref('links/' + id).once('value', (snapshot) => {
+        if(snapshot.exists()) {
+            const data = snapshot.val();
+            const fileUrl = data.file;
+            const text = data.text;
+            document.getElementById('text-message').innerText = text;
+            if(fileUrl.match(/.(jpeg|jpg|gif|png)$/i)) {
+                document.getElementById('file-preview').innerHTML = '<img src="' + fileUrl + '" style="max-width:100%">';
+            } else {
+                document.getElementById('file-preview').innerHTML = '<a href="' + fileUrl + '" target="_blank">View File</a>';
+            }
+            document.getElementById('download-btn').setAttribute('onclick', 'window.open("' + fileUrl + '")');
+        } else {
+            alert('Invalid Link');
+        }
+    });
+    </script>
+</body>
+</html>
