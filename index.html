@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendGo - File Sharer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>SendGo File Sharer</h2>
+        <input type="file" id="file-upload"><br>
+        <textarea id="message-box" placeholder="Enter optional message"></textarea><br>
+        <button id="get-link-btn" onclick="uploadFile()">Get Link</button>
+        <div id="upload-status" style="display:none;">
+            <button disabled>Uploading... <span id="timer">0</span>s</button>
+            <button onclick="clearLink()">Clear</button>
+        </div>
+        <div id="link-section" style="display:none;">
+            <input type="text" id="generated-link" readonly>
+            <button onclick="copyLink()">Copy Link</button>
+            <button onclick="shareLink()">Share</button>
+            <button onclick="downloadLink()">Download</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js"></script>
+    <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD8Rmym4TQJtG4i_eY9MDyrCVqi4zZdA6w",
+        authDomain: "continue-56506.firebaseapp.com",
+        databaseURL: "https://continue-56506-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "continue-56506",
+        storageBucket: "continue-56506.firebasestorage.app",
+        messagingSenderId: "182199976967",
+        appId: "1:182199976967:web:9389057bcaa05d605556a2"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let timerInterval;
+    function uploadFile() {
+        const file = document.getElementById('file-upload').files[0];
+        const message = document.getElementById('message-box').value;
+        if(!file) {
+            alert('Please select a file');
+            return;
+        }
+        document.getElementById('upload-status').style.display = 'block';
+        let time = 0;
+        timerInterval = setInterval(() => {
+            time++;
+            document.getElementById('timer').innerText = time;
+        }, 1000);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'ml_default');
+
+        axios.post('https://api.cloudinary.com/v1_1/dr93s1jal/upload', formData)
+        .then(response => {
+            const fileUrl = response.data.secure_url;
+            const id = Date.now();
+            db.ref('links/' + id).set({ file: fileUrl, text: message });
+            clearInterval(timerInterval);
+            document.getElementById('generated-link').value = window.location.origin + '/link.html?id=' + id;
+            document.getElementById('link-section').style.display = 'block';
+        });
+    }
+
+    function clearLink() {
+        document.getElementById('upload-status').style.display = 'none';
+        document.getElementById('link-section').style.display = 'none';
+        document.getElementById('generated-link').value = '';
+        clearInterval(timerInterval);
+    }
+
+    function copyLink() {
+        const link = document.getElementById('generated-link');
+        link.select();
+        document.execCommand('copy');
+        alert('Link copied');
+    }
+
+    function shareLink() {
+        const link = document.getElementById('generated-link').value;
+        if(navigator.share) {
+            navigator.share({ url: link });
+        } else {
+            alert('Share not supported');
+        }
+    }
+
+    function downloadLink() {
+        const link = document.getElementById('generated-link').value;
+        window.open(link, '_blank');
+    }
+    </script>
+</body>
+</html>
