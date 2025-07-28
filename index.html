@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SendGo Fast File Upload</title>
+    <title>SendGo Fast Upload (Cloudinary)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h2>SendGo Fast Uploader</h2>
+        <h2>SendGo Cloudinary Uploader</h2>
         <input type="file" id="file-upload"><br>
         <textarea id="message-box" placeholder="Enter optional message"></textarea><br>
         <button onclick="uploadFile()">Get Link</button>
@@ -19,6 +19,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script>
     function uploadFile() {
         const file = document.getElementById('file-upload').files[0];
@@ -28,26 +29,21 @@
             return;
         }
 
-        fetch(`https://us-central1-continue-56506.cloudfunctions.net/getSignedUrl?filename=${file.name}&contentType=${file.type}`)
-            .then(res => res.json())
-            .then(data => {
-                return fetch(data.url, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": file.type
-                    },
-                    body: file
-                }).then(() => {
-                    const fileUrl = `https://firebasestorage.googleapis.com/v0/b/continue-56506.appspot.com/o/${encodeURIComponent(file.name)}?alt=media`;
-                    document.getElementById('generated-link').value = fileUrl;
-                    document.getElementById('link-section').style.display = 'block';
-                    console.log("File uploaded:", fileUrl);
-                    alert('File uploaded successfully!');
-                });
-            }).catch(err => {
-                console.error(err);
-                alert('Upload failed');
-            });
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'sendgo_preset');
+
+        axios.post('https://api.cloudinary.com/v1_1/dr93s1jal/upload', formData)
+        .then(response => {
+            const fileUrl = response.data.secure_url;
+            document.getElementById('generated-link').value = fileUrl + (message ? ('\n' + message) : '');
+            document.getElementById('link-section').style.display = 'block';
+            alert('File uploaded successfully!');
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Upload failed');
+        });
     }
 
     function copyLink() {
