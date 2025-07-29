@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendGo Final Uploader</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>SendGo Cloudinary Uploader</h2>
+        <input type="file" id="file-upload"><br>
+        <textarea id="message-box" placeholder="Enter optional message"></textarea><br>
+        <button onclick="uploadFile()">Get Link</button>
+        <div id="link-section" style="display:none;">
+            <p id="upload-status"></p>
+            <input type="text" id="generated-link" readonly>
+            <button onclick="copyLink()">Copy Link</button>
+            <button id="download-btn" style="display:none;">Download</button>
+            <button id="share-btn" style="display:none;">Share</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script>
+    function uploadFile() {
+        const file = document.getElementById('file-upload').files[0];
+        const message = document.getElementById('message-box').value;
+        if (!file) {
+            alert('Please select a file');
+            return;
+        }
+
+        document.getElementById('link-section').style.display = 'block';
+        document.getElementById('upload-status').innerText = 'Uploading...';
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'sendgo_preset');
+
+        axios.post('https://api.cloudinary.com/v1_1/dr93s1jal/auto/upload', formData)
+        .then(response => {
+            const fileUrl = response.data.secure_url;
+            const previewUrl = 'preview.html?file=' + encodeURIComponent(fileUrl) + '&text=' + encodeURIComponent(message);
+
+            document.getElementById('generated-link').value = previewUrl;
+            document.getElementById('upload-status').innerText = 'Upload Completed!';
+            document.getElementById('download-btn').style.display = 'inline-block';
+            document.getElementById('share-btn').style.display = 'inline-block';
+
+            document.getElementById('download-btn').onclick = function() {
+                const a = document.createElement('a');
+                a.href = fileUrl;
+                a.download = fileUrl.split('/').pop();
+                a.click();
+            };
+
+            document.getElementById('share-btn').onclick = function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'SendGo File',
+                        url: previewUrl
+                    }).then(() => {
+                        console.log('Thanks for sharing!');
+                    }).catch(console.error);
+                } else {
+                    alert('Share API not supported');
+                }
+            };
+
+            alert('File uploaded successfully!');
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Upload failed');
+        });
+    }
+
+    function copyLink() {
+        const link = document.getElementById('generated-link');
+        link.select();
+        document.execCommand('copy');
+        alert('Link copied to clipboard');
+    }
+    </script>
+       </div>
+       
+       <div style="text-align: center; margin: 20px 0;">
+    <script type="text/javascript">
+        atOptions = {
+            'key' : 'af9f1d0e36ef028f1a1b5b60c57ecc71',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+        };
+    </script>
+    <script type="text/javascript" src="//www.highperformanceformat.com/af9f1d0e36ef028f1a1b5b60c57ecc71/invoke.js"></script>
+</div>
+</body>
+</html>

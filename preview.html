@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendGo File Preview</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>File Preview</h2>
+        <div id="file-preview"></div>
+        <p id="text-message"></p>
+        <button onclick="downloadFile()">Download</button>
+        <button onclick="copyLink()">Copy Link</button>
+        <button onclick="shareLink()">Share</button>
+    </div>
+
+    <script>
+    const params = new URLSearchParams(window.location.search);
+    const fileUrl = params.get('file');
+    const text = params.get('text');
+
+    if(fileUrl.match(/.(jpeg|jpg|gif|png)$/i)) {
+        document.getElementById('file-preview').innerHTML = '<img src="' + fileUrl + '" style="max-width:100%">';
+    } else {
+        document.getElementById('file-preview').innerHTML = '<a href="' + fileUrl + '" target="_blank">View File</a>';
+    }
+
+    document.getElementById('text-message').innerText = text;
+
+    function downloadFile() {
+        const a = document.createElement('a');
+        a.href = fileUrl;
+        a.download = fileUrl.split('/').pop();
+        a.click();
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard');
+    }
+
+    function shareLink() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'SendGo File',
+                url: window.location.href
+            }).then(() => {
+                console.log('Thanks for sharing!');
+            }).catch(console.error);
+        } else {
+            alert('Share API not supported');
+        }
+    }
+    </script>
+</body>
+</html>
